@@ -1,135 +1,92 @@
 import torch
-
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     pipeline
 )
 
-from langchain_huggingface import HuggingFacePipeline
 
-
-
-
-MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-
+MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
 # --------------------------------
-# Check device
+# Device Setup
 # --------------------------------
-
 if torch.cuda.is_available():
-
     device = "cuda"
-
-    print("Using GPU:")
-    print(torch.cuda.get_device_name(0))
-
+    print("Using GPU:", torch.cuda.get_device_name(0))
 else:
-
     device = "cpu"
-
-    print("CUDA not available.")
-    print("Using CPU.")
+    print("CUDA not available. Using CPU.")
 
 
 # --------------------------------
-# Tokenizer
+# Load Tokenizer & Model
 # --------------------------------
-
 tokenizer = AutoTokenizer.from_pretrained(
     MODEL_NAME
 )
 
-
-# --------------------------------
-# Load model
-# --------------------------------
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    torch_dtype=torch.float32 if device == "cpu" else torch.float16,
+)
 
 if device == "cuda":
-
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
-        torch_dtype=torch.float16
-    )
-
     model = model.to("cuda")
 
-else:
-
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME
-    )
-
-
-
-model.generation_config.max_length = None
-
 
 # --------------------------------
-# Text generation pipeline
+# Pipeline Initialization
 # --------------------------------
-
 pipe = pipeline(
     "text-generation",
     model=model,
     tokenizer=tokenizer,
-    max_new_tokens=300,
-    temperature=0.2,
-    do_sample=True,
-    repetition_penalty=1.2,
-    no_repeat_ngram_size=3,
-    return_full_text=False
-)
-
-
-
-llm = HuggingFacePipeline(
-    pipeline=pipe
+    do_sample=False,
 )
 
 
 def ask_campusmate(question, context):
+    """
+    Generate an accurate RAG answer using local Qwen2.5-0.5B-Instruct.
+    Uses ChatML template to guarantee strict adherence to context and rules.
+    """
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are CampusMate AI, a college assistant.\n\n"
+                "Answer the student's question using ONLY the information provided in the college knowledge base.\n\n"
+                "Rules:\n"
+                "1. Do not make up information.\n"
+                "2. Do not use outside knowledge.\n"
+                "3. If the answer is not available in the context, say:\n"
+                '"I could not find this information in the college knowledge base."\n'
+                "4. Give a detailed but easy-to-understand answer.\n"
+                "5. Stay focused on the student's question.\n"
+                "6. If the question asks for names, dates, departments, rules, or other specific information, "
+                "provide the information clearly in a list when appropriate."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                f"College Knowledge Base:\n\n{context}\n\n"
+                f"Student Question:\n{question}"
+            ),
+        },
+    ]
 
-    prompt = f"""
-You are CampusMate AI, a college assistant.
+    prompt = tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
 
-Answer the student's question using ONLY
-the information provided in the college
-knowledge base.
+    outputs = pipe(
+        prompt,
+        max_new_tokens=300,
+        return_full_text=False,
+    )
 
-Rules:
-
-1. Do not make up information.
-
-2. Do not use outside knowledge.
-
-3. If the answer is not available in the
-context, say:
-
-"I could not find this information in the
-college knowledge base."
-
-4. Give a detailed but easy-to-understand answer.
-
-5. Stay focused on the student's question.
-
-6. If the question asks for names, dates,
-departments, rules, or other specific information,
-provide the information clearly in a list when
-appropriate.
-
-College Knowledge Base:
-
-{context}
-
-Student Question:
-
-{question}
-
-Answer:
-"""
-
-    response = llm.invoke(prompt)
-
-    return response
+    return outputs[0]["generated_text"].strip()
