@@ -8,7 +8,7 @@ huggingface-hub
 pypdf
 streamlit
 python-dotenv
-transformers 
-torch 
+transformers
+torch
 accelerate
 torchvision

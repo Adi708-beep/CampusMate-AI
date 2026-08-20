@@ -1,4 +1,7 @@
-from langchain_community.vectorstores import FAISS
+try:
+    from langchain_community.vectorstores import FAISS
+except (ImportError, ModuleNotFoundError):
+    from langchain_community.vectorstores.faiss import FAISS
 
 from app.embeddings import get_embeddings
 from app.llm import ask_campusmate
