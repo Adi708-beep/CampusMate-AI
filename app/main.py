@@ -15,7 +15,9 @@ def main():
         question = input("You: ")
 
         if question.lower() == "exit":
-            print("\nGoodbye!")
+
+            print("Goodbye!")
+
             break
 
         try:
@@ -28,9 +30,10 @@ def main():
             print("\nSources:")
 
             for source in sources:
+
                 print("-", source)
 
-            print("\n" + "-" * 40)
+            print("\n" + "-" * 50)
 
         except Exception as e:
 
