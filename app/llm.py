@@ -8,9 +8,7 @@ from transformers import (
 
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
-# --------------------------------
-# Device Setup
-# --------------------------------
+
 if torch.cuda.is_available():
     device = "cuda"
     print("Using GPU:", torch.cuda.get_device_name(0))
