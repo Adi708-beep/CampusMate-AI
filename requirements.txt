@@ -8,3 +8,6 @@ huggingface-hub
 pypdf
 streamlit
 python-dotenv
+transformers 
+torch 
+accelerate

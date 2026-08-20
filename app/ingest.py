@@ -4,7 +4,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 
-from app.embeddings import embeddings
+from app.embeddings import get_embeddings
 
 
 DOCUMENT_FOLDER = Path("data/documents")
@@ -52,6 +52,10 @@ def main():
 
     print("Creating embeddings...")
 
+    # Create embedding model
+    embeddings = get_embeddings()
+
+    # Create FAISS vector database
     vectorstore = FAISS.from_documents(
         chunks,
         embeddings
@@ -62,6 +66,7 @@ def main():
     )
 
     print("Vector database created successfully!")
+
 
 if __name__ == "__main__":
     main()

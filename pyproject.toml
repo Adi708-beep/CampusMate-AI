@@ -7,7 +7,11 @@ authors = [
     { name = "t93888593-stack", email = "t93888593@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "accelerate>=1.14.0",
+    "torch>=2.13.0",
+    "transformers>=5.15.1",
+]
 
 [project.scripts]
 campusmate-ai = "campusmate_ai:main"
